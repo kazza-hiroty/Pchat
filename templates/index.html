@@ -1,19 +1,20 @@
+{% from 'form_helper.html' import displayField %}
 {% extends "prelogin-layout.html"%}
-{% block title %}Registration{% endblock %}
+{% block title %} Registration {% endblock %}
 
 {% block content %}
     <h1>Get started</h1>
 
-    <form action ="{{url_for('index')}}", method="POST">
-        <div>
+    <form action = "{{url_for('index')}}", method="POST">
+        <!-- <div>
             {{form.username(class_='form-control', placeholder = 'Username', autocomplete = 'off', autofocus=true)}}
+            <ul>
+                {%for error in form.username.errors %}
+                <li>{{error}}</li>
+                {% endfor %}
+            </ul>
         </div>
 
-        <ul>
-            {%for error in form.username.errors %}
-            <li>{{error}}</li>
-            {% endfor %}
-        </ul>
         <div>
             {{form.password(class_='form-control', placeholder = 'Password')}}
 
@@ -31,11 +32,17 @@
                 <li>{{error}}</li>
                 {% endfor %}
             </ul>
-        </div>
+        </div> -->
+
+        <!-- using macro for the same codes -->
+        {{displayField(form.username, 'Username', autocomplete="off", autofocus=true)}}
+        {{displayField(form.password, 'Password')}}
+        {{displayField(form.confirm_pswd, 'Retype Password')}}
+
         <div>
         {{ form.submit_button }}
         </div>
         {{ form.csrf_token }}
     </form>
 
-{%endblock%}
+{% endblock %}
