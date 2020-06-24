@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, flash
 from passlib.hash import pbkdf2_sha256
 
 from flask_login import LoginManager, login_user, current_user, login_required, logout_user
@@ -36,6 +36,9 @@ def index():
         user = User(username=username, password=hashed_pswd)
         db.session.add(user)
         db.session.commit()
+
+        flash('Registered successfully. Please login.', 'success')
+
         return redirect(url_for('login'))
 
     return render_template("index.html", form = reg_form)
@@ -50,7 +53,6 @@ def login():
     if login_form.validate_on_submit():
         user_object = User.query.filter_by(username=login_form.username.data).first()
         login_user(user_object)
-        
         return redirect(url_for('chat'))   
 
     return render_template("login.html", form=login_form)
@@ -58,12 +60,10 @@ def login():
 @app.route("/chat", methods=['GET', 'POST'])
 @login_required
 def chat():
-    #  if current_user.is_authenticated:
-    #         return "Logged in, finally!"
-    #using login_required method
 
     if not current_user.is_authenticated:
-        return "Please login before accessing chat"
+        flash('Please login.', 'danger') #category name can be anything but 'danger' matches the name of Bootstrap class
+        return redirect(url_for('login'))
 
     return "chat with me"
 
@@ -71,7 +71,8 @@ def chat():
 def logout():
 
     logout_user()
-    return "Logged out using flask-login"
+    flash('You have logged out successfully', 'success')
+    return redirect(url_for('login'))
 
 
 
