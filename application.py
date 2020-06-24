@@ -2,9 +2,11 @@ from flask import Flask, render_template, redirect, url_for, flash
 from passlib.hash import pbkdf2_sha256
 
 from flask_login import LoginManager, login_user, current_user, login_required, logout_user
-
+from flask_socketio import SocketIO, send, emit
 from wtform_fields import *
 from models import *
+
+
 
 app = Flask(__name__)
 app.secret_key = 'replace later'
@@ -12,6 +14,10 @@ app.secret_key = 'replace later'
 #configure database
 app.config['SQLALCHEMY_DATABASE_URI']='postgres://ohyfqbttucxqsk:79ffc643b1766c4490a4f292e6ac45f9529cf65e89c39c07c0cf34388f7651ce@ec2-18-233-32-61.compute-1.amazonaws.com:5432/dbbbh4cqcmtbk2'
 db = SQLAlchemy(app)
+
+#Initialise Flask-SocketIO
+socketio = SocketIO(app)
+
 
 #Configure flask login
 login = LoginManager(app)
@@ -61,11 +67,11 @@ def login():
 @login_required
 def chat():
 
-    if not current_user.is_authenticated:
-        flash('Please login.', 'danger') #category name can be anything but 'danger' matches the name of Bootstrap class
-        return redirect(url_for('login'))
+    # if not current_user.is_authenticated:
+    #     flash('Please login.', 'danger') #category name can be anything but 'danger' matches the name of Bootstrap class
+    #     return redirect(url_for('login'))
 
-    return "chat with me"
+    return render_template('chat.html')
 
 @app.route("/logout", methods=['GET'])
 def logout():
@@ -74,8 +80,14 @@ def logout():
     flash('You have logged out successfully', 'success')
     return redirect(url_for('login'))
 
+@socketio.on('message')
+def message(data):
+
+    send(data)
 
 
-if __name__ == "__main__":
-    
-    app.run(debug=True)
+
+
+if __name__ == "__main__":    
+    socketio.run(app, debug=True)
+    #it is in documentation of flask-socketio
