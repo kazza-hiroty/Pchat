@@ -1,3 +1,5 @@
+import os
+
 from time import localtime, strftime
 from flask import Flask, render_template, redirect, url_for, flash
 from passlib.hash import pbkdf2_sha256
@@ -10,10 +12,11 @@ from models import *
 
 
 app = Flask(__name__)
-app.secret_key = 'replace later'
+app.secret_key = os.environ.get('SECRET')
+#this secret key has to be hidden by everyone
 
 #configure database
-app.config['SQLALCHEMY_DATABASE_URI']='postgres://ohyfqbttucxqsk:79ffc643b1766c4490a4f292e6ac45f9529cf65e89c39c07c0cf34388f7651ce@ec2-18-233-32-61.compute-1.amazonaws.com:5432/dbbbh4cqcmtbk2'
+app.config['SQLALCHEMY_DATABASE_URI']=os.environ.get('DATABASE_URL')
 db = SQLAlchemy(app)
 
 #Initialise Flask-SocketIO
@@ -98,5 +101,4 @@ def leave(data):
     send({'msg': data['username'] +" has left the " + data['room'] + "room."}, room=data['room'])
 
 if __name__ == "__main__":    
-    socketio.run(app, debug=True)
-    #it is in documentation of flask-socketio
+    app.run()
