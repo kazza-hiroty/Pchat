@@ -67,16 +67,6 @@ def login():
 
     return render_template("login.html", form=login_form)
 
-@app.route("/chat", methods=['GET', 'POST'])
-@login_required
-def chat():
-
-    # if not current_user.is_authenticated:
-    #     flash('Please login.', 'danger') #category name can be anything but 'danger' matches the name of Bootstrap class
-    #     return redirect(url_for('login'))
-
-    return render_template('chat.html', username=current_user.username, rooms=ROOMS)
-
 @app.route("/logout", methods=['GET'])
 def logout():
 
@@ -84,21 +74,53 @@ def logout():
     flash('You have logged out successfully', 'success')
     return redirect(url_for('login'))
 
-@socketio.on('message')
-def message(data):
-    print(f"\n\n{data}\n\n")
-    send({'msg': data['msg'], 'username':data['username'], 'time_stamp': strftime('%b-%d %I:%M%p', localtime())}, room=data['room'])
 
+@app.route("/chat", methods=['GET', 'POST'])
+@login_required
+def chat():
+
+    if not current_user.is_authenticated:
+        flash('Please login.', 'danger') #category name can be anything but 'danger' matches the name of Bootstrap class
+        return redirect(url_for('login'))
+
+    return render_template('chat.html', username=current_user.username, rooms=ROOMS)
+
+@socketio.on('incoming-msg')
+def on_message(data):
+    """Broadcast messages"""
+
+    msg = data["msg"]
+    username = data["username"]
+    room = data["room"]
+    # Set timestamp
+    time_stamp = time.strftime('%b-%d %I:%M%p', time.localtime())
+    send({"username": username, "msg": msg, "time_stamp": time_stamp}, room=room)
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    # note that we set the 404 status explicitly
+    return render_template('404.html'), 404
 
 @socketio.on('join')
-def join(data):
-    join_room(data['room'])
-    send({'msg': data['username'] +" has joined the " + data['room'] + "room."}, room=data['room'])
+def on_join(data):
+    """User joins a room"""
+
+    username = data["username"]
+    room = data["room"]
+    join_room(room)
+
+    # Broadcast that new user has joined
+    send({"msg": username + " has joined the " + room + " room."}, room=room)
 
 @socketio.on('leave')
-def leave(data):
-    leave_room(data['room'])
-    send({'msg': data['username'] +" has left the " + data['room'] + "room."}, room=data['room'])
+def on_leave(data):
+    """User leaves a room"""
+
+    username = data['username']
+    room = data['room']
+    leave_room(room)
+    send({"msg": username + " has left the room"}, room=room)
 
 if __name__ == "__main__":    
-    app.run()
+    app.run(debug=True)
